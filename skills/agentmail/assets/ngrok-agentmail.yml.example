@@ -1,0 +1,9 @@
+version: 2
+authtoken: replace-with-your-ngrok-authtoken
+tunnels:
+  agentmail:
+    proto: http
+    addr: 18801
+    schemes:
+      - https
+web_addr: 127.0.0.1:4041

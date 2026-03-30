@@ -1,0 +1,15 @@
+{
+  "port": 8788,
+  "host": "127.0.0.1",
+  "maxEvents": 200,
+  "openclaw": {
+    "binary": "/opt/homebrew/bin/openclaw",
+    "thinking": "low",
+    "timeoutSeconds": 600
+  },
+  "inboxAgentMap": {
+    "harke@agentmail.to": "main",
+    "lekha@agentmail.to": "lekha",
+    "nirman@agentmail.to": "nirman"
+  }
+}

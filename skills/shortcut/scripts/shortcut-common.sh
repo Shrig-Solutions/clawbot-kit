@@ -1,0 +1,52 @@
+#!/bin/bash
+# Shared helpers for Shortcut skill scripts
+
+set -euo pipefail
+
+SHORTCUT_CONFIG_DIR="${SHORTCUT_CONFIG_DIR:-$HOME/.config/shortcut}"
+SHORTCUT_WORKFLOW_CONFIG="${SHORTCUT_WORKFLOW_CONFIG:-$SHORTCUT_CONFIG_DIR/workflow-states}"
+SHORTCUT_DEFAULT_WORKFLOW_NAME="${SHORTCUT_DEFAULT_WORKFLOW_NAME:-Fishtechy}"
+SHORTCUT_DEFAULT_WORKFLOW_ID="${SHORTCUT_DEFAULT_WORKFLOW_ID:-500000031}"
+SHORTCUT_DEFAULT_STATE_TODO="${SHORTCUT_DEFAULT_STATE_TODO:-500000032}"
+SHORTCUT_DEFAULT_STATE_IN_PROGRESS="${SHORTCUT_DEFAULT_STATE_IN_PROGRESS:-500000037}"
+SHORTCUT_DEFAULT_STATE_DONE="${SHORTCUT_DEFAULT_STATE_DONE:-500005693}"
+SHORTCUT_DEFAULT_STATE_BLOCKED="${SHORTCUT_DEFAULT_STATE_BLOCKED:-500000038}"
+
+shortcut_load_token() {
+  if [ -n "${SHORTCUT_API_TOKEN:-}" ]; then
+    printf '%s' "$SHORTCUT_API_TOKEN"
+    return 0
+  fi
+
+  if [ -f "$SHORTCUT_CONFIG_DIR/api-token" ]; then
+    tr -d '\n' < "$SHORTCUT_CONFIG_DIR/api-token"
+    return 0
+  fi
+
+  return 1
+}
+
+shortcut_require_token() {
+  local token
+  token="$(shortcut_load_token || true)"
+  if [ -z "$token" ]; then
+    echo "❌ SHORTCUT_API_TOKEN not found" >&2
+    echo "Set it via environment variable or store in $SHORTCUT_CONFIG_DIR/api-token" >&2
+    exit 1
+  fi
+  printf '%s' "$token"
+}
+
+shortcut_load_workflow_config() {
+  if [ -f "$SHORTCUT_WORKFLOW_CONFIG" ]; then
+    # shellcheck disable=SC1090
+    source "$SHORTCUT_WORKFLOW_CONFIG"
+  fi
+
+  export SHORTCUT_WORKFLOW_NAME="${SHORTCUT_WORKFLOW_NAME:-$SHORTCUT_DEFAULT_WORKFLOW_NAME}"
+  export SHORTCUT_WORKFLOW_ID="${SHORTCUT_WORKFLOW_ID:-$SHORTCUT_DEFAULT_WORKFLOW_ID}"
+  export SHORTCUT_STATE_TODO="${SHORTCUT_STATE_TODO:-$SHORTCUT_DEFAULT_STATE_TODO}"
+  export SHORTCUT_STATE_IN_PROGRESS="${SHORTCUT_STATE_IN_PROGRESS:-$SHORTCUT_DEFAULT_STATE_IN_PROGRESS}"
+  export SHORTCUT_STATE_DONE="${SHORTCUT_STATE_DONE:-$SHORTCUT_DEFAULT_STATE_DONE}"
+  export SHORTCUT_STATE_BLOCKED="${SHORTCUT_STATE_BLOCKED:-$SHORTCUT_DEFAULT_STATE_BLOCKED}"
+}

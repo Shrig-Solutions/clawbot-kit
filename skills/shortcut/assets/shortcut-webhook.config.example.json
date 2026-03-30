@@ -1,0 +1,40 @@
+{
+  "port": 8787,
+  "webhookSecret": "replace-with-your-shortcut-webhook-secret",
+  "agents": {
+    "main": {
+      "aliases": ["@Harke", "Harke:", "harke"],
+      "shortcutOwners": {
+        "memberIds": [],
+        "memberNames": ["Harke"]
+      },
+      "openclawAgentId": "main"
+    },
+    "nirman": {
+      "aliases": ["@Nirman", "@nirman-op", "Nirman:", "nirman", "nirman-op"],
+      "shortcutOwners": {
+        "memberIds": [],
+        "memberNames": ["nirman-op"]
+      },
+      "openclawAgentId": "nirman"
+    },
+    "lekha": {
+      "aliases": ["@Lekha", "Lekha:", "lekha"],
+      "shortcutOwners": {
+        "memberIds": [],
+        "memberNames": ["Lekha"]
+      },
+      "openclawAgentId": "lekha"
+    }
+  },
+  "openclaw": {
+    "binary": "/opt/homebrew/bin/openclaw",
+    "workingDirectory": "/Users/shrig0001/.openclaw",
+    "timeoutSeconds": 60,
+    "thinking": "low"
+  },
+  "dedupe": {
+    "maxKeys": 500,
+    "ttlSeconds": 21600
+  }
+}
