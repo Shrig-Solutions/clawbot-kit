@@ -194,7 +194,7 @@ function buildViewerResponse(url) {
     ok: true,
     service: 'agentmail-webhook-viewer',
     status: 'listening',
-    endpoint: '/hooks/agentmail',
+    endpoint: '/agentmail/webhook',
     method: 'GET',
     message: 'POST AgentMail webhooks to this URL. This GET view shows the most recent events first.',
     count: events.length,
@@ -206,13 +206,13 @@ function buildViewerResponse(url) {
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
 
-  if (req.method === 'GET' && (url.pathname === '/hooks/agentmail' || url.pathname === '/hooks/agentmail/')) {
+  if (req.method === 'GET' && (url.pathname === '/agentmail/webhook' || url.pathname === '/agentmail/webhook/')) {
     res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(buildViewerResponse(url), null, 2));
     return;
   }
 
-  if ((url.pathname === '/agentmail/raw' || url.pathname === '/hooks/agentmail') && ['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
+  if (url.pathname === '/agentmail/webhook' && ['POST', 'PUT', 'PATCH'].includes(req.method || '')) {
     const bodyBuffer = await collectBody(req);
     const bodyText = bodyBuffer.toString('utf8');
     const parsedBody = safeParseJson(bodyText);
@@ -257,6 +257,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, HOST, () => {
   console.log(`AgentMail webhook viewer listening on http://${HOST}:${PORT}`);
   console.log(`Using config: ${CONFIG_PATH}`);
-  console.log('Capture endpoint: /agentmail/raw');
-  console.log('JSON events: /agentmail/raw/events');
+  console.log('Webhook endpoint: /agentmail/webhook');
 });

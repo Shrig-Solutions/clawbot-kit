@@ -39,10 +39,10 @@ echo "Ngrok config: $NGROK_CONFIG"
 echo "Edit inboxAgentMap as needed."
 echo
 echo "Local viewer check:"
-curl -sS -i http://127.0.0.1:8788/hooks/agentmail | sed -n '1,12p'
+curl -sS -i http://127.0.0.1:8788/agentmail/webhook | sed -n '1,12p'
 echo
 echo "Local proxied check:"
-curl -sS -i http://127.0.0.1:18801/hooks/agentmail | sed -n '1,12p'
+curl -sS -i http://127.0.0.1:18801/agentmail/webhook | sed -n '1,12p'
 echo
 echo "Public URL:"
 "$SKILL_DIR/scripts/print_public_url.sh" || true

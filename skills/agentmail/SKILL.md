@@ -17,7 +17,7 @@ Use these scripts for outbound API work:
 Use the skill-managed local webhook service when incoming AgentMail email should wake an OpenClaw agent automatically.
 
 Read `references/LOCAL-INTEGRATION.md` when you need to:
-- explain how `/hooks/agentmail` works
+- explain how `/agentmail/webhook` works
 - set up or repair inbound AgentMail triggering
 - verify local/public health checks
 - understand the LaunchAgent and AgentMail-only proxy arrangement
@@ -127,7 +127,7 @@ Manage AgentMail-side webhooks with:
 
 ```bash
 python scripts/setup_webhook.py --list
-python scripts/setup_webhook.py --create --url "https://<public-host>/hooks/agentmail"
+python scripts/setup_webhook.py --create --url "https://<public-host>/agentmail/webhook"
 ```
 
 Default event type is:
@@ -163,7 +163,7 @@ Prefer:
 ## References
 
 Read as needed:
-- `references/LOCAL-INTEGRATION.md` - local `/hooks/agentmail` architecture and health checks
+- `references/LOCAL-INTEGRATION.md` - local `/agentmail/webhook` architecture and health checks
 - `references/WEBHOOKS.md` - AgentMail webhook concepts
 - `references/API.md` - API reference
 - `references/EXAMPLES.md` - usage patterns

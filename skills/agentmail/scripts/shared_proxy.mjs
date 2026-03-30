@@ -9,24 +9,12 @@ const AGENTMAIL_VIEWER_TARGET = { host: '127.0.0.1', port: 8788 };
 function pickTarget(req) {
   const url = req.url || '';
   if (url.startsWith('/shortcut/webhook')) return SHORTCUT_TARGET;
-  if (url.startsWith('/agentmail/raw')) return AGENTMAIL_VIEWER_TARGET;
-  if (url.startsWith('/hooks/agentmail')) return AGENTMAIL_VIEWER_TARGET;
+  if (url.startsWith('/agentmail/webhook')) return AGENTMAIL_VIEWER_TARGET;
   return OPENCLAW_TARGET;
 }
 
 const server = http.createServer((req, res) => {
   const url = req.url || '';
-
-  if (req.method === 'GET' && url === '/hooks/agentmail/events') {
-    res.writeHead(302, { location: '/agentmail/raw/events' });
-    res.end();
-    return;
-  }
-  if (req.method === 'GET' && url === '/hooks/agentmail/events.json') {
-    res.writeHead(302, { location: '/agentmail/raw/events.json' });
-    res.end();
-    return;
-  }
 
   const target = pickTarget(req);
   const proxyReq = http.request({
@@ -50,5 +38,5 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`OpenClaw shared proxy listening on http://127.0.0.1:${PORT}`);
-  console.log('Routes: /shortcut/webhook -> 8787, /agentmail/raw* -> 8788, /hooks/agentmail -> 8788, everything else -> 18789');
+  console.log('Routes: /shortcut/webhook -> 8787, /agentmail/webhook -> 8788, everything else -> 18789');
 });

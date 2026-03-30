@@ -8,9 +8,9 @@ Flow:
 
 1. Sender emails an AgentMail inbox like `nirman@agentmail.to`
 2. AgentMail posts a webhook to the public URL:
-   - `https://<public-host>/hooks/agentmail`
-3. The AgentMail-only proxy forwards `/hooks/agentmail` to:
-   - `http://127.0.0.1:8788/hooks/agentmail`
+   - `https://<public-host>/agentmail/webhook`
+3. The AgentMail-only proxy forwards `/agentmail/webhook` to:
+   - `http://127.0.0.1:8788/agentmail/webhook`
 4. The skill-managed webhook service stores the webhook event
 5. If the event is a real inbound `message.received` for a configured inbox, the service runs:
    - `openclaw agent --agent <mapped-agent> --message <formatted-email-prompt>`
@@ -50,19 +50,19 @@ Example:
 Local viewer:
 
 ```bash
-curl -i http://127.0.0.1:8788/hooks/agentmail
+curl -i http://127.0.0.1:8788/agentmail/webhook
 ```
 
 Through AgentMail proxy:
 
 ```bash
-curl -i http://127.0.0.1:18800/hooks/agentmail
+curl -i http://127.0.0.1:18800/agentmail/webhook
 ```
 
 Public:
 
 ```bash
-curl -i https://<public-host>/hooks/agentmail
+curl -i https://<public-host>/agentmail/webhook
 ```
 
 Expected result for all:
@@ -107,6 +107,6 @@ That bootstrap:
 
 ## What this hook is for
 
-Keep `/hooks/agentmail` if inbound email should automatically wake agents.
+Keep `/agentmail/webhook` if inbound email should automatically wake agents.
 
 You do **not** need it for outbound-only email sending.
