@@ -42,10 +42,6 @@ cp -R repos/clawbot-kit/skills/shortcut ~/.openclaw/skills/shortcut
 
 Then restart OpenClaw if needed.
 
-### Option 3: update from source
-
-If you already have the skill installed elsewhere, sync it from this repo instead of fetching an old clawhub package.
-
 ## Setup
 
 ### 1) Add your Shortcut API token
