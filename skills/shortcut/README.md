@@ -10,6 +10,15 @@ Manage stories on Shortcut.com kanban boards directly from your OpenClaw agent.
 - manage checklist tasks and comments
 - handle webhook-driven Shortcut mentions and assignments
 
+## Prerequisites
+
+Before you start, make sure you have:
+
+- a Shortcut.com account with API access
+- an OpenClaw workspace already set up
+- a shell with `bash` available
+- permission to edit files under `~/.openclaw/skills`
+
 ## Installation
 
 This skill is already laid out as an OpenClaw skill in this repo.
@@ -37,27 +46,55 @@ Then restart OpenClaw if needed.
 
 If you already have the skill installed elsewhere, sync it from this repo instead of fetching an old clawhub package.
 
-## Prerequisites
+## Setup
 
-- Shortcut.com account with API access
-- API token from Shortcut.com (Settings → API Tokens)
-- Token must have permissions for the workspace(s) you want to manage
+### 1) Add your Shortcut API token
 
-## Configuration
+Store your API token in the standard location:
 
-1. Store your Shortcut API token:
-   ```bash
-   mkdir -p ~/.config/shortcut
-   echo "your-token" > ~/.config/shortcut/api-token
-   chmod 600 ~/.config/shortcut/api-token
-   ```
+```bash
+mkdir -p ~/.config/shortcut
+printf 'your-token\n' > ~/.config/shortcut/api-token
+chmod 600 ~/.config/shortcut/api-token
+```
 
-2. Initialize workflow states for your workspace:
-   ```bash
-   scripts/shortcut-init-workflow.sh
-   ```
+You can also use `SHORTCUT_API_TOKEN` in the environment.
 
-This will auto-detect your workspace's workflow state IDs and save them to `~/.config/shortcut/workflow-states`.
+### 2) Initialize workflow state mapping
+
+Set up the workflow state IDs for your workspace:
+
+```bash
+scripts/shortcut-init-workflow.sh
+```
+
+This auto-detects your workspace's workflow state IDs and saves them to:
+
+```bash
+~/.config/shortcut/workflow-states
+```
+
+Run it again whenever you switch tokens or workspaces.
+
+### 3) Optional webhook/bootstrap setup
+
+If you want inbound Shortcut mentions and assignments to wake OpenClaw, bootstrap the webhook side too:
+
+```bash
+bash scripts/bootstrap.sh
+```
+
+The local webhook config lives at:
+
+```bash
+~/.openclaw/skills/shortcut/config/config.json
+```
+
+The ngrok config lives at:
+
+```bash
+~/.openclaw/skills/shortcut/config/ngrok-shortcut.yml
+```
 
 ## Usage
 
@@ -66,17 +103,63 @@ Once installed, your OpenClaw agent can handle requests like:
 - "Add a story to the board: Fix login bug"
 - "Show me active stories on Shortcut"
 - "Mark story #38 as started"
+- "Add a checklist item to that story"
 
-## Scripts
+## Available operations
 
-The skill includes scripts for:
+### List stories
 
-- listing stories
-- showing story details
-- creating stories
-- updating stories
-- managing checklist tasks
-- adding, updating, and deleting comments
+```bash
+scripts/shortcut-list-stories.sh [--active|--completed|--all] [--json]
+```
+
+### Show story details
+
+```bash
+scripts/shortcut-show-story.sh <story-id>
+```
+
+### Create story
+
+```bash
+scripts/shortcut-create-story.sh "Story name" [--description "text"] [--type feature|bug|chore]
+```
+
+Optional override:
+
+```bash
+scripts/shortcut-create-story.sh "Story name" --state-id 12345
+```
+
+### Update story
+
+```bash
+scripts/shortcut-update-story.sh <story-id> [--complete|--todo|--in-progress|--blocked] [--description "new text"]
+```
+
+### Checklist tasks
+
+```bash
+scripts/shortcut-create-task.sh <story-id> "task description"
+scripts/shortcut-update-task.sh <story-id> <task-id> [--complete|--incomplete]
+scripts/shortcut-edit-task.sh <story-id> <task-id> "new description"
+scripts/shortcut-delete-task.sh <story-id> <task-id>
+```
+
+### Comments
+
+```bash
+scripts/shortcut-add-comment.sh <story-id> "comment text"
+scripts/shortcut-update-comment.sh <story-id> <comment-id> "new text"
+scripts/shortcut-delete-comment.sh <story-id> <comment-id>
+```
+
+## Notes
+
+- Scripts use `SHORTCUT_API_TOKEN` first, then fall back to `~/.config/shortcut/api-token`
+- The shared default workflow is `Fishtechy`
+- Re-run `scripts/shortcut-init-workflow.sh` after switching tokens/workspaces so state IDs stay correct
+- Read `references/LOCAL-WEBHOOK.md` when working on the webhook receiver, LaunchAgents, or public webhook URL
 
 ## License
 
