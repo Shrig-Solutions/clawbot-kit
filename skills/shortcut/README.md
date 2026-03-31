@@ -90,9 +90,13 @@ The local webhook config lives at:
 
 `bash scripts/bootstrap.sh` sets up the local webhook receiver and proxy pieces.
 
+### Ports and public URLs
+
+This setup listens locally on the Shortcut webhook port defined in the skill config, and the Shortcut dashboard webhook must point at a public URL that can reach that port through your public host or tunnel.
+
 ### What you still need to do
 
-You still need to configure Shortcut to send webhooks to your public URL so mentions and assignments can reach OpenClaw.
+You still need to configure Shortcut to send webhooks to your public URL and make sure that URL is publicly reachable for the webhook listener.
 
 ## Usage
 

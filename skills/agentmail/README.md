@@ -120,9 +120,13 @@ The default event type is `message.received`.
 
 `bash scripts/bootstrap.sh` sets up the local webhook viewer and proxy pieces.
 
+### Ports and public URLs
+
+This setup listens locally on the AgentMail webhook port defined in the skill config, and the public AgentMail dashboard webhook must point at a URL that can reach that port through your public host or tunnel.
+
 ### What you still need to do
 
-You still need to register the AgentMail webhook on the AgentMail side so events actually arrive at your public URL.
+You still need to register the AgentMail webhook on the AgentMail side and make sure the dashboard webhook URL is public and acceptable for that listener.
 
 ## Usage
 
