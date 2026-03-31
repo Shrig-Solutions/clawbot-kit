@@ -116,6 +116,14 @@ python scripts/setup_webhook.py --create --url "https://<public-host>/agentmail/
 
 The default event type is `message.received`.
 
+### What bootstrap covers
+
+`bash scripts/bootstrap.sh` sets up the local webhook viewer and proxy pieces.
+
+### What you still need to do
+
+You still need to register the AgentMail webhook on the AgentMail side so events actually arrive at your public URL.
+
 ## Usage
 
 ### Send mail

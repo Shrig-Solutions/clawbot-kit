@@ -86,11 +86,13 @@ The local webhook config lives at:
 ~/.openclaw/skills/shortcut/config/config.json
 ```
 
-The ngrok config lives at:
+### What bootstrap covers
 
-```bash
-~/.openclaw/skills/shortcut/config/ngrok-shortcut.yml
-```
+`bash scripts/bootstrap.sh` sets up the local webhook receiver and proxy pieces.
+
+### What you still need to do
+
+You still need to configure Shortcut to send webhooks to your public URL so mentions and assignments can reach OpenClaw.
 
 ## Usage
 
