@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 USAGE = """Usage:
+  python3 scripts/clawkit.py install command
   python3 scripts/clawkit.py install openclaw [installer args...]
   python3 scripts/clawkit.py install bundle <backend|frontend|full-stack> [installer args...]
   python3 scripts/clawkit.py skill setup <skill_name> [script args...]
@@ -27,6 +28,9 @@ USAGE = """Usage:
   python3 scripts/clawkit.py list-agents [options]
 
 Commands:
+  install command
+      Install `clawkit` into ~/.local/bin so it can be run from any directory.
+
   install openclaw
       Install OpenClaw using the official installer wrapper.
 
@@ -93,6 +97,7 @@ Create-agent options:
   --identity-name <name>    Write a simple IDENTITY.md with this display name
 
 Examples:
+  python3 scripts/clawkit.py install command
   python3 scripts/clawkit.py install openclaw --no-onboard
   python3 scripts/clawkit.py install bundle full-stack --model default --bot clawbot
   python3 scripts/clawkit.py skill setup agentmail
@@ -665,6 +670,9 @@ def handle_setup(argv: list[str]) -> int:
 
     if argv[2] == "openclaw":
         return run_script("install-openclaw.sh", argv[3:])
+
+    if argv[2] == "command":
+        return run_script("install-clawkit-command.sh", argv[3:])
 
     if argv[2] == "bundle":
         if len(argv) < 4:

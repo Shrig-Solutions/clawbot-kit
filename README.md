@@ -6,40 +6,52 @@ Portable Clawbot/OpenClaw skill kit.
 
 Use `clawkit` as the main entrypoint.
 
+Install the `clawkit` command so it works from any directory:
+
+```bash
+python3 scripts/clawkit.py install command
+```
+
+After that, you can run:
+
+```bash
+clawkit --help
+```
+
 Install OpenClaw:
 
 ```bash
-python3 scripts/clawkit.py install openclaw
+clawkit install openclaw
 ```
 
 Install a bundle:
 
 ```bash
-python3 scripts/clawkit.py install bundle full-stack --model default --bot clawbot --channel engineering
+clawkit install bundle full-stack --model default --bot clawbot --channel engineering
 ```
 
 Set up a skill:
 
 ```bash
-python3 scripts/clawkit.py skill setup agentmail
+clawkit skill setup agentmail
 ```
 
 Attach a skill to an existing generated agent:
 
 ```bash
-python3 scripts/clawkit.py skill add agentmail to backend --bundle full-stack
+clawkit skill add agentmail to backend --bundle full-stack
 ```
 
 Create a separate OpenClaw agent for one skill:
 
 ```bash
-python3 scripts/clawkit.py skill new-agent agentmail as backend-mail --model gpt-5.2
+clawkit skill new-agent agentmail as backend-mail --model gpt-5.2
 ```
 
 List agents:
 
 ```bash
-python3 scripts/clawkit.py agents list
+clawkit agents list
 ```
 
 ## Included skills
@@ -70,6 +82,12 @@ cp -R skills/git-essentials ~/.openclaw/skills/
 ## Detailed commands
 
 The sections below describe the lower-level commands that `clawkit` wraps.
+
+If you have not installed the global command yet, replace `clawkit ...` below with:
+
+```bash
+python3 scripts/clawkit.py ...
+```
 
 ## Install OpenClaw
 
