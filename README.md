@@ -6,6 +6,8 @@ Portable Clawbot/OpenClaw skill kit.
 
 - `skills/agentmail` — email workflows and inbox-triggered agents
 - `skills/shortcut` — Shortcut story and task management
+- `skills/nodejs-nestjs-backend` — Node.js and NestJS backend development guidance
+- `skills/frontend-react-nextjs` — frontend development guidance for HTML, CSS, Tailwind, React, and Next.js
 - `skills/git-commit` — commit helper workflow
 - `skills/git-essentials` — core Git workflow helpers
 
@@ -19,6 +21,8 @@ Example:
 mkdir -p ~/.openclaw/skills
 cp -R skills/agentmail ~/.openclaw/skills/
 cp -R skills/shortcut ~/.openclaw/skills/
+cp -R skills/nodejs-nestjs-backend ~/.openclaw/skills/
+cp -R skills/frontend-react-nextjs ~/.openclaw/skills/
 cp -R skills/git-commit ~/.openclaw/skills/
 cp -R skills/git-essentials ~/.openclaw/skills/
 ```
