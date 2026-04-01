@@ -13,6 +13,7 @@ USAGE = """Usage:
   python3 scripts/clawkit.py install command
   python3 scripts/clawkit.py install openclaw [installer args...]
   python3 scripts/clawkit.py install bundle <backend|frontend|full-stack> [installer args...]
+  python3 scripts/clawkit.py doctor
   python3 scripts/clawkit.py skill setup <skill_name> [script args...]
   python3 scripts/clawkit.py skill add <skill_name> to <agent_name> [options] [-- setup args...]
   python3 scripts/clawkit.py skill new-agent <skill_name> as <agent_name> [options] [-- setup args...]
@@ -36,6 +37,9 @@ Commands:
 
   install bundle <bundle>
       Install one of the predefined Clawbot bundles.
+
+  doctor
+      Check whether `clawkit`, PATH, and OpenClaw-related directories look healthy.
 
   skill setup <skill_name>
       Run the setup flow for a skill.
@@ -100,6 +104,7 @@ Examples:
   python3 scripts/clawkit.py install command
   python3 scripts/clawkit.py install openclaw --no-onboard
   python3 scripts/clawkit.py install bundle full-stack --model default --bot clawbot
+  python3 scripts/clawkit.py doctor
   python3 scripts/clawkit.py skill setup agentmail
   python3 scripts/clawkit.py skill add agentmail to backend --bundle full-stack
   python3 scripts/clawkit.py skill new-agent agentmail as backend-mail --model gpt-5.2
@@ -198,6 +203,12 @@ def default_setup_script(skill_name: str) -> Path | None:
 
 def script_path(name: str) -> Path:
     return repo_root() / "scripts" / name
+
+
+def in_path(directory: Path) -> bool:
+    entries = [Path(item).expanduser() for item in os.environ.get("PATH", "").split(os.pathsep) if item]
+    target = directory.expanduser()
+    return any(entry == target for entry in entries)
 
 
 def remove_path(path: Path) -> None:
@@ -365,6 +376,36 @@ def run_script(script_name: str, extra_args: list[str]) -> int:
     command = choose_runner(target) + extra_args
     result = subprocess.run(command, check=False)
     return result.returncode
+
+
+def run_doctor() -> int:
+    home = Path.home()
+    local_bin = home / ".local" / "bin"
+    clawkit_path = shutil.which("clawkit")
+    openclaw_path = shutil.which("openclaw")
+    openclaw_home = Path(os.environ.get("OPENCLAW_HOME", home / ".openclaw")).expanduser()
+
+    checks: list[tuple[str, bool, str]] = [
+        ("clawkit command installed", clawkit_path is not None, clawkit_path or "not found on PATH"),
+        ("~/.local/bin on PATH", in_path(local_bin), str(local_bin)),
+        ("OpenClaw home exists", openclaw_home.exists(), str(openclaw_home)),
+        ("OpenClaw binary available", openclaw_path is not None, openclaw_path or "not found on PATH"),
+    ]
+
+    failed = False
+    for label, ok, detail in checks:
+        status = "OK" if ok else "WARN"
+        print(f"[{status}] {label}: {detail}")
+        if not ok:
+            failed = True
+
+    if failed:
+        print("\nSome checks need attention. Common fix:")
+        print("  python3 scripts/clawkit.py install command")
+        return 1
+
+    print("\nclawkit environment looks good.")
+    return 0
 
 
 def write_identity_file(workspace: Path, agent_name: str, identity_name: str | None) -> None:
@@ -788,6 +829,8 @@ def main(argv: list[str]) -> int:
         return handle_agent_subcommand(argv)
     if argv[1] == "agents":
         return handle_agents(argv)
+    if argv[1] == "doctor":
+        return run_doctor()
     if argv[1] == "skill":
         return handle_skill(argv)
     if argv[1] == "install":
