@@ -27,6 +27,39 @@ cp -R skills/git-commit ~/.openclaw/skills/
 cp -R skills/git-essentials ~/.openclaw/skills/
 ```
 
+## Install OpenClaw
+
+This repo now includes thin wrappers around the official OpenClaw installer scripts documented here:
+
+- [Install](https://docs.openclaw.ai/install)
+- [Installer internals](https://docs.openclaw.ai/install/installer)
+
+Default machine install on macOS/Linux:
+
+```bash
+bash scripts/install-openclaw.sh
+```
+
+Skip onboarding:
+
+```bash
+bash scripts/install-openclaw.sh --no-onboard
+```
+
+Local-prefix install under `~/.openclaw`:
+
+```bash
+bash scripts/install-openclaw-local.sh
+```
+
+Custom local prefix:
+
+```bash
+bash scripts/install-openclaw-local.sh --prefix /opt/openclaw --version latest
+```
+
+These wrappers call the official hosted installer scripts from `openclaw.ai`, so the target machine needs internet access.
+
 ## Setup overview
 
 Each skill has its own README with setup steps. In general, you will need to:
