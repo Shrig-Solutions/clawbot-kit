@@ -11,19 +11,44 @@ from pathlib import Path
 
 USAGE = """Usage:
   python3 scripts/clawkit.py agent <agent_name> skill <skill_name> [options] [-- setup args...]
+  python3 scripts/clawkit.py create-agent <agent_name> skill <skill_name> [options] [-- setup args...]
+  python3 scripts/clawkit.py list-agents [options]
 
-Options:
-  --bundle <bundle>         Limit the update to a specific bundle when agent names repeat
+Commands:
+  agent <agent_name> skill <skill_name>
+      Attach a skill to one generated bundle agent and optionally run that skill's setup script.
+
+  create-agent <agent_name> skill <skill_name>
+      Create a separate OpenClaw agent via `openclaw agents add`, create a dedicated workspace,
+      attach the requested skill only to that agent workspace, and optionally run setup.
+
+  list-agents
+      List current OpenClaw agents. Uses `openclaw agents list --bindings` when available and
+      falls back to local Clawbot bundle manifests under ~/.openclaw/clawbot-kit/agents.
+
+Shared options:
   --openclaw-home <path>    OpenClaw home directory (default: ~/.openclaw)
-  --copy                    Copy the skill into ~/.openclaw/skills
-  --symlink                 Symlink the skill into ~/.openclaw/skills (default)
-  --skip-setup              Do not run the skill setup script after adding the skill
+  --copy                    Copy the skill instead of symlinking it
+  --symlink                 Symlink the skill (default)
+  --skip-setup              Do not run the skill setup script after attaching it
   -h, --help                Show this help text
+
+Attach-to-existing-agent options:
+  --bundle <bundle>         Limit the update to a specific generated bundle when agent names repeat
+
+Create-agent options:
+  --model <id>              Pass model id to `openclaw agents add`
+  --bind <channel[:acct]>   Repeatable binding passed through to `openclaw agents add`
+  --workspace <dir>         Explicit agent workspace path
+  --agent-dir <dir>         Explicit agent state directory
+  --identity-name <name>    Write a simple IDENTITY.md with this display name
 
 Examples:
   python3 scripts/clawkit.py agent backend skill agentmail
   python3 scripts/clawkit.py agent backend skill agentmail --bundle full-stack
-  python3 scripts/clawkit.py agent backend skill agentmail -- --help
+  python3 scripts/clawkit.py create-agent backend-mail skill agentmail --model gpt-5.2
+  python3 scripts/clawkit.py create-agent ops-shortcut skill shortcut --bind telegram:ops -- --help
+  python3 scripts/clawkit.py list-agents
 """
 
 
@@ -105,29 +130,34 @@ def default_setup_script(skill_name: str) -> Path | None:
     return target if target.exists() else None
 
 
-def install_skill_into_openclaw(skill_name: str, openclaw_home: Path, install_method: str) -> Path:
+def remove_path(path: Path) -> None:
+    if not path.exists() and not path.is_symlink():
+        return
+    if path.is_symlink() or path.is_file():
+        path.unlink()
+        return
+    shutil.rmtree(path)
+
+
+def install_skill_into_dir(skill_name: str, destination_root: Path, install_method: str) -> Path:
     source_dir = skills_root() / skill_name
-    target_dir = openclaw_home / "skills" / skill_name
+    target_dir = destination_root / skill_name
 
     if not source_dir.exists():
         raise FileNotFoundError(f"Skill not found in repo: {source_dir}")
 
     target_dir.parent.mkdir(parents=True, exist_ok=True)
+    remove_path(target_dir)
+
     if install_method == "copy":
-        if target_dir.exists() or target_dir.is_symlink():
-            if target_dir.is_dir() and not target_dir.is_symlink():
-                shutil.rmtree(target_dir)
-            else:
-                target_dir.unlink()
         shutil.copytree(source_dir, target_dir)
     else:
-        if target_dir.exists() or target_dir.is_symlink():
-            if target_dir.is_dir() and not target_dir.is_symlink():
-                shutil.rmtree(target_dir)
-            else:
-                target_dir.unlink()
         target_dir.symlink_to(source_dir, target_is_directory=True)
     return target_dir
+
+
+def install_skill_into_openclaw(skill_name: str, openclaw_home: Path, install_method: str) -> Path:
+    return install_skill_into_dir(skill_name, openclaw_home / "skills", install_method)
 
 
 def find_agent_manifest(openclaw_home: Path, agent_name: str, bundle_name: str | None) -> Path:
@@ -217,10 +247,116 @@ def run_skill_setup(skill_name: str, extra_args: list[str]) -> int:
     return result.returncode
 
 
-def parse_args(argv: list[str]) -> tuple[str, str, Path, str | None, str, bool, list[str]]:
-    if len(argv) < 5 or argv[1] in {"-h", "--help"}:
-        print(USAGE)
-        raise SystemExit(0 if len(argv) >= 2 else 1)
+def list_agents(openclaw_home: Path) -> int:
+    openclaw_bin = shutil.which("openclaw")
+    if openclaw_bin:
+        result = subprocess.run([openclaw_bin, "agents", "list", "--bindings"], check=False)
+        if result.returncode == 0:
+            return 0
+        print("Falling back to local Clawbot agent manifests because `openclaw agents list --bindings` failed.", file=sys.stderr)
+
+    agents_root = openclaw_home / "clawbot-kit" / "agents"
+    if not agents_root.exists():
+        print(f"No OpenClaw CLI found on PATH and no local Clawbot agent manifests found under {agents_root}.", file=sys.stderr)
+        return 1
+
+    found = False
+    for bundle_dir in sorted(path for path in agents_root.iterdir() if path.is_dir()):
+        manifests = sorted(bundle_dir.glob("*.json"))
+        if not manifests:
+            continue
+        found = True
+        print(f"[bundle:{bundle_dir.name}]")
+        for manifest_path in manifests:
+            manifest = load_json(manifest_path)
+            agent_id = str(manifest.get("id") or manifest_path.stem)
+            role = str(manifest.get("role") or "")
+            model = str(manifest.get("model") or "")
+            channel = str(manifest.get("channel") or "")
+            skills = ", ".join(str(item) for item in (manifest.get("skills") or []))
+            print(f"- {agent_id}")
+            print(f"  role: {role or '(unknown)'}")
+            print(f"  model: {model or '(unset)'}")
+            print(f"  channel: {channel or '(unset)'}")
+            print(f"  skills: {skills or '(none)'}")
+        print()
+
+    if not found:
+        print(f"No agent manifests found under {agents_root}.", file=sys.stderr)
+        return 1
+    return 0
+
+
+def write_identity_file(workspace: Path, agent_name: str, identity_name: str | None) -> None:
+    label = identity_name or agent_name
+    identity_path = workspace / "IDENTITY.md"
+    if identity_path.exists():
+        return
+    identity_path.write_text(f"# {label}\n\nA dedicated OpenClaw agent for the `{agent_name}` role.\n")
+
+
+def create_openclaw_agent(
+    agent_name: str,
+    skill_name: str,
+    openclaw_home: Path,
+    install_method: str,
+    model: str | None,
+    binds: list[str],
+    workspace: Path | None,
+    agent_dir: Path | None,
+    identity_name: str | None,
+) -> tuple[Path, Path]:
+    openclaw_bin = shutil.which("openclaw")
+    if not openclaw_bin:
+        raise RuntimeError("openclaw is required on PATH to create a separate OpenClaw agent")
+
+    workspace_path = (workspace or (openclaw_home / "clawbot-kit" / "workspaces" / agent_name)).expanduser()
+    agent_dir_path = (agent_dir or (openclaw_home / "clawbot-kit" / "agent-state" / agent_name)).expanduser()
+
+    workspace_path.mkdir(parents=True, exist_ok=True)
+    agent_dir_path.mkdir(parents=True, exist_ok=True)
+    (workspace_path / "skills").mkdir(parents=True, exist_ok=True)
+
+    install_skill_into_dir(skill_name, workspace_path / "skills", install_method)
+    write_identity_file(workspace_path, agent_name, identity_name)
+
+    command = [
+        openclaw_bin,
+        "agents",
+        "add",
+        agent_name,
+        "--workspace",
+        str(workspace_path),
+        "--agent-dir",
+        str(agent_dir_path),
+        "--non-interactive",
+    ]
+    if model:
+        command += ["--model", model]
+    for bind in binds:
+        command += ["--bind", bind]
+
+    result = subprocess.run(command, check=False)
+    if result.returncode != 0:
+        raise RuntimeError(f"`{' '.join(command)}` failed with exit code {result.returncode}")
+
+    set_identity_command = [
+        openclaw_bin,
+        "agents",
+        "set-identity",
+        "--workspace",
+        str(workspace_path),
+        "--from-identity",
+    ]
+    subprocess.run(set_identity_command, check=False)
+
+    return workspace_path, agent_dir_path
+
+
+def parse_attach_args(argv: list[str]) -> tuple[str, str, Path, str | None, str, bool, list[str]]:
+    if len(argv) < 5:
+        print(USAGE, file=sys.stderr)
+        raise SystemExit(1)
 
     if argv[1] != "agent" or argv[3] != "skill":
         print(USAGE, file=sys.stderr)
@@ -269,9 +405,95 @@ def parse_args(argv: list[str]) -> tuple[str, str, Path, str | None, str, bool, 
     return agent_name, skill_name, openclaw_home, bundle_name, install_method, run_setup, setup_args
 
 
-def main(argv: list[str]) -> int:
+def parse_create_agent_args(
+    argv: list[str],
+) -> tuple[str, str, Path, str, bool, list[str], str | None, list[str], Path | None, Path | None, str | None]:
+    if len(argv) < 5:
+        print(USAGE, file=sys.stderr)
+        raise SystemExit(1)
+
+    if argv[1] != "create-agent" or argv[3] != "skill":
+        print(USAGE, file=sys.stderr)
+        raise SystemExit(1)
+
+    agent_name = argv[2]
+    skill_name = argv[4]
+    openclaw_home = Path(os.environ.get("OPENCLAW_HOME", Path.home() / ".openclaw")).expanduser()
+    install_method = "symlink"
+    run_setup = True
+    setup_args: list[str] = []
+    model: str | None = None
+    binds: list[str] = []
+    workspace: Path | None = None
+    agent_dir: Path | None = None
+    identity_name: str | None = None
+
+    index = 5
+    while index < len(argv):
+        arg = argv[index]
+        if arg == "--":
+            setup_args = argv[index + 1 :]
+            break
+        if arg == "--openclaw-home":
+            openclaw_home = Path(argv[index + 1]).expanduser()
+            index += 2
+            continue
+        if arg == "--copy":
+            install_method = "copy"
+            index += 1
+            continue
+        if arg == "--symlink":
+            install_method = "symlink"
+            index += 1
+            continue
+        if arg == "--skip-setup":
+            run_setup = False
+            index += 1
+            continue
+        if arg == "--model":
+            model = argv[index + 1]
+            index += 2
+            continue
+        if arg == "--bind":
+            binds.append(argv[index + 1])
+            index += 2
+            continue
+        if arg == "--workspace":
+            workspace = Path(argv[index + 1]).expanduser()
+            index += 2
+            continue
+        if arg == "--agent-dir":
+            agent_dir = Path(argv[index + 1]).expanduser()
+            index += 2
+            continue
+        if arg == "--identity-name":
+            identity_name = argv[index + 1]
+            index += 2
+            continue
+        if arg in {"-h", "--help"}:
+            print(USAGE)
+            raise SystemExit(0)
+        print(f"Unknown argument: {arg}", file=sys.stderr)
+        raise SystemExit(1)
+
+    return (
+        agent_name,
+        skill_name,
+        openclaw_home,
+        install_method,
+        run_setup,
+        setup_args,
+        model,
+        binds,
+        workspace,
+        agent_dir,
+        identity_name,
+    )
+
+
+def handle_attach(argv: list[str]) -> int:
     try:
-        agent_name, skill_name, openclaw_home, bundle_name, install_method, run_setup, setup_args = parse_args(argv)
+        agent_name, skill_name, openclaw_home, bundle_name, install_method, run_setup, setup_args = parse_attach_args(argv)
         install_skill_into_openclaw(skill_name, openclaw_home, install_method)
         manifest_path = find_agent_manifest(openclaw_home, agent_name, bundle_name)
         resolved_bundle, added = add_skill_to_agent(manifest_path, skill_name)
@@ -294,6 +516,87 @@ def main(argv: list[str]) -> int:
 
     print(f"Running setup for skill '{skill_name}'...")
     return run_skill_setup(skill_name, setup_args)
+
+
+def handle_create_agent(argv: list[str]) -> int:
+    try:
+        (
+            agent_name,
+            skill_name,
+            openclaw_home,
+            install_method,
+            run_setup,
+            setup_args,
+            model,
+            binds,
+            workspace,
+            agent_dir,
+            identity_name,
+        ) = parse_create_agent_args(argv)
+
+        install_skill_into_openclaw(skill_name, openclaw_home, install_method)
+        workspace_path, agent_dir_path = create_openclaw_agent(
+            agent_name,
+            skill_name,
+            openclaw_home,
+            install_method,
+            model,
+            binds,
+            workspace,
+            agent_dir,
+            identity_name,
+        )
+    except SystemExit as exc:
+        return int(exc.code or 0)
+    except Exception as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    print(f"Created OpenClaw agent '{agent_name}' with workspace-local skill '{skill_name}'.")
+    print(f"Workspace: {workspace_path}")
+    print(f"Agent state dir: {agent_dir_path}")
+    print(f"Workspace skill path: {workspace_path / 'skills' / skill_name}")
+
+    if not run_setup:
+        return 0
+
+    print(f"Running setup for skill '{skill_name}'...")
+    return run_skill_setup(skill_name, setup_args)
+
+
+def handle_list_agents(argv: list[str]) -> int:
+    openclaw_home = Path(os.environ.get("OPENCLAW_HOME", Path.home() / ".openclaw")).expanduser()
+
+    index = 2
+    while index < len(argv):
+        arg = argv[index]
+        if arg == "--openclaw-home":
+            openclaw_home = Path(argv[index + 1]).expanduser()
+            index += 2
+            continue
+        if arg in {"-h", "--help"}:
+            print(USAGE)
+            return 0
+        print(f"Unknown argument: {arg}", file=sys.stderr)
+        return 1
+
+    return list_agents(openclaw_home)
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2 or argv[1] in {"-h", "--help"}:
+        print(USAGE)
+        return 0 if len(argv) >= 2 else 1
+
+    if argv[1] == "agent":
+        return handle_attach(argv)
+    if argv[1] == "create-agent":
+        return handle_create_agent(argv)
+    if argv[1] == "list-agents":
+        return handle_list_agents(argv)
+
+    print(USAGE, file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":

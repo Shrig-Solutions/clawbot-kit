@@ -103,6 +103,58 @@ That command:
 - refreshes the bundle-level skill union in the bundle manifest and profile
 - runs the skill's `setup_skill.py` when that script exists
 
+## Create a separate OpenClaw agent for one skill
+
+`clawkit` can also create a real isolated OpenClaw agent for a specific skill. This follows the documented OpenClaw CLI flow for `openclaw agents add` and uses a dedicated workspace so the skill applies only to that agent.
+
+Relevant OpenClaw docs:
+
+- [CLI reference: agents](https://docs.openclaw.ai/cli#agents)
+- [Agents command page](https://docs.openclaw.ai/cli/agents)
+- [Multi-agent routing](https://docs.openclaw.ai/multi-agent)
+- [Skills location and precedence](https://docs.openclaw.ai/tools/creating-skills)
+
+Commands:
+
+```bash
+python3 scripts/clawkit.py create-agent <agent_name> skill <skill_name>
+bash scripts/clawkit.sh create-agent <agent_name> skill <skill_name>
+python3 scripts/clawkit.py list-agents
+bash scripts/clawkit.sh list-agents
+```
+
+Examples:
+
+```bash
+python3 scripts/clawkit.py create-agent backend-mail skill agentmail --model gpt-5.2
+python3 scripts/clawkit.py create-agent ops-shortcut skill shortcut --bind telegram:ops
+python3 scripts/clawkit.py create-agent backend-mail skill agentmail -- --help
+```
+
+That command:
+
+- ensures the skill is available in shared `~/.openclaw/skills`
+- creates a dedicated agent workspace under `~/.openclaw/clawbot-kit/workspaces/<agent_name>`
+- places the selected skill under that workspace's local `skills/` directory
+- runs `openclaw agents add <agent_name> --workspace <dir> --agent-dir <dir> --non-interactive`
+- optionally passes `--model` and repeatable `--bind` arguments through to OpenClaw
+- optionally runs the skill's `setup_skill.py` after the agent is created
+
+To list current agents:
+
+```bash
+python3 scripts/clawkit.py list-agents
+bash scripts/clawkit.sh list-agents
+```
+
+When `openclaw` is available on PATH, this runs:
+
+```bash
+openclaw agents list --bindings
+```
+
+If the OpenClaw CLI is unavailable, `clawkit` falls back to local bundle manifests under `~/.openclaw/clawbot-kit/agents/`.
+
 ## Setup overview
 
 Each skill has its own README with setup steps. In general, you will need to:
