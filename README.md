@@ -79,6 +79,30 @@ bash scripts/skill.sh shortcut bootstrap.sh
 
 If the script name is omitted, the launcher tries `skills/<skill>/scripts/setup_skill.py`.
 
+## Attach a skill to one agent
+
+You can also add a skill to one generated agent and immediately run that skill's setup flow:
+
+```bash
+python3 scripts/clawkit.py agent <agent_name> skill <skill_name>
+bash scripts/clawkit.sh agent <agent_name> skill <skill_name>
+```
+
+Examples:
+
+```bash
+python3 scripts/clawkit.py agent backend skill agentmail
+python3 scripts/clawkit.py agent backend skill agentmail --bundle full-stack
+python3 scripts/clawkit.py agent backend skill agentmail -- --help
+```
+
+That command:
+
+- installs the skill into `~/.openclaw/skills`
+- updates only the targeted agent manifest and `.skills` file
+- refreshes the bundle-level skill union in the bundle manifest and profile
+- runs the skill's `setup_skill.py` when that script exists
+
 ## Setup overview
 
 Each skill has its own README with setup steps. In general, you will need to:
