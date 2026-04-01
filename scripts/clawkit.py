@@ -10,11 +10,60 @@ from pathlib import Path
 
 
 USAGE = """Usage:
+  python3 scripts/clawkit.py install openclaw [installer args...]
+  python3 scripts/clawkit.py install bundle <backend|frontend|full-stack> [installer args...]
+  python3 scripts/clawkit.py skill setup <skill_name> [script args...]
+  python3 scripts/clawkit.py skill add <skill_name> to <agent_name> [options] [-- setup args...]
+  python3 scripts/clawkit.py skill new-agent <skill_name> as <agent_name> [options] [-- setup args...]
+  python3 scripts/clawkit.py agents list [options]
+  python3 scripts/clawkit.py setup openclaw [installer args...]
+  python3 scripts/clawkit.py setup bundle <backend|frontend|full-stack> [installer args...]
+  python3 scripts/clawkit.py setup skill <skill_name> [script args...]
+  python3 scripts/clawkit.py agent add-skill <agent_name> <skill_name> [options] [-- setup args...]
+  python3 scripts/clawkit.py agent create <agent_name> <skill_name> [options] [-- setup args...]
+  python3 scripts/clawkit.py agent list [options]
   python3 scripts/clawkit.py agent <agent_name> skill <skill_name> [options] [-- setup args...]
   python3 scripts/clawkit.py create-agent <agent_name> skill <skill_name> [options] [-- setup args...]
   python3 scripts/clawkit.py list-agents [options]
 
 Commands:
+  install openclaw
+      Install OpenClaw using the official installer wrapper.
+
+  install bundle <bundle>
+      Install one of the predefined Clawbot bundles.
+
+  skill setup <skill_name>
+      Run the setup flow for a skill.
+
+  skill add <skill_name> to <agent_name>
+      Add a skill to an existing generated agent and optionally run setup.
+
+  skill new-agent <skill_name> as <agent_name>
+      Create a separate OpenClaw agent dedicated to that skill.
+
+  agents list
+      List current OpenClaw agents.
+
+  setup openclaw
+      Run the official OpenClaw installer wrapper.
+
+  setup bundle <bundle>
+      Install one of the predefined Clawbot bundles.
+
+  setup skill <skill_name>
+      Run that skill's default setup script.
+
+  agent add-skill <agent_name> <skill_name>
+      Attach a skill to one generated bundle agent and optionally run that skill's setup script.
+
+  agent create <agent_name> <skill_name>
+      Create a separate OpenClaw agent via `openclaw agents add`, create a dedicated workspace,
+      attach the requested skill only to that agent workspace, and optionally run setup.
+
+  agent list
+      List current OpenClaw agents.
+
   agent <agent_name> skill <skill_name>
       Attach a skill to one generated bundle agent and optionally run that skill's setup script.
 
@@ -44,6 +93,18 @@ Create-agent options:
   --identity-name <name>    Write a simple IDENTITY.md with this display name
 
 Examples:
+  python3 scripts/clawkit.py install openclaw --no-onboard
+  python3 scripts/clawkit.py install bundle full-stack --model default --bot clawbot
+  python3 scripts/clawkit.py skill setup agentmail
+  python3 scripts/clawkit.py skill add agentmail to backend --bundle full-stack
+  python3 scripts/clawkit.py skill new-agent agentmail as backend-mail --model gpt-5.2
+  python3 scripts/clawkit.py agents list
+  python3 scripts/clawkit.py setup openclaw --no-onboard
+  python3 scripts/clawkit.py setup bundle full-stack --model default --bot clawbot
+  python3 scripts/clawkit.py setup skill agentmail
+  python3 scripts/clawkit.py agent add-skill backend agentmail --bundle full-stack
+  python3 scripts/clawkit.py agent create backend-mail agentmail --model gpt-5.2
+  python3 scripts/clawkit.py agent list
   python3 scripts/clawkit.py agent backend skill agentmail
   python3 scripts/clawkit.py agent backend skill agentmail --bundle full-stack
   python3 scripts/clawkit.py create-agent backend-mail skill agentmail --model gpt-5.2
@@ -128,6 +189,10 @@ def default_setup_script(skill_name: str) -> Path | None:
     scripts_dir = skills_root() / skill_name / "scripts"
     target = scripts_dir / "setup_skill.py"
     return target if target.exists() else None
+
+
+def script_path(name: str) -> Path:
+    return repo_root() / "scripts" / name
 
 
 def remove_path(path: Path) -> None:
@@ -285,6 +350,16 @@ def list_agents(openclaw_home: Path) -> int:
         print(f"No agent manifests found under {agents_root}.", file=sys.stderr)
         return 1
     return 0
+
+
+def run_script(script_name: str, extra_args: list[str]) -> int:
+    target = script_path(script_name)
+    if not target.exists():
+        print(f"Script not found: {target}", file=sys.stderr)
+        return 1
+    command = choose_runner(target) + extra_args
+    result = subprocess.run(command, check=False)
+    return result.returncode
 
 
 def write_identity_file(workspace: Path, agent_name: str, identity_name: str | None) -> None:
@@ -583,13 +658,134 @@ def handle_list_agents(argv: list[str]) -> int:
     return list_agents(openclaw_home)
 
 
+def handle_setup(argv: list[str]) -> int:
+    if len(argv) < 3:
+        print(USAGE, file=sys.stderr)
+        return 1
+
+    if argv[2] == "openclaw":
+        return run_script("install-openclaw.sh", argv[3:])
+
+    if argv[2] == "bundle":
+        if len(argv) < 4:
+            print("Bundle name is required.", file=sys.stderr)
+            return 1
+        bundle = argv[3]
+        return run_script("install-clawbot-bundle.sh", ["--bundle", bundle, *argv[4:]])
+
+    if argv[2] == "skill":
+        if len(argv) < 4:
+            print("Skill name is required.", file=sys.stderr)
+            return 1
+        skill_name = argv[3]
+        return run_skill_setup(skill_name, argv[4:])
+
+    print(USAGE, file=sys.stderr)
+    return 1
+
+
+def handle_install(argv: list[str]) -> int:
+    if len(argv) < 3:
+        print(USAGE, file=sys.stderr)
+        return 1
+
+    if argv[2] == "openclaw":
+        return run_script("install-openclaw.sh", argv[3:])
+
+    if argv[2] == "bundle":
+        if len(argv) < 4:
+            print("Bundle name is required.", file=sys.stderr)
+            return 1
+        bundle = argv[3]
+        return run_script("install-clawbot-bundle.sh", ["--bundle", bundle, *argv[4:]])
+
+    print(USAGE, file=sys.stderr)
+    return 1
+
+
+def handle_skill(argv: list[str]) -> int:
+    if len(argv) < 3:
+        print(USAGE, file=sys.stderr)
+        return 1
+
+    if argv[2] == "setup":
+        if len(argv) < 4:
+            print("Skill name is required.", file=sys.stderr)
+            return 1
+        return run_skill_setup(argv[3], argv[4:])
+
+    if argv[2] == "add":
+        if len(argv) < 6 or argv[4] != "to":
+            print(USAGE, file=sys.stderr)
+            return 1
+        translated = [argv[0], "agent", "add-skill", argv[5], argv[3], *argv[6:]]
+        return handle_agent_subcommand(translated)
+
+    if argv[2] == "new-agent":
+        if len(argv) < 6 or argv[4] != "as":
+            print(USAGE, file=sys.stderr)
+            return 1
+        translated = [argv[0], "agent", "create", argv[5], argv[3], *argv[6:]]
+        return handle_agent_subcommand(translated)
+
+    print(USAGE, file=sys.stderr)
+    return 1
+
+
+def handle_agents(argv: list[str]) -> int:
+    if len(argv) < 3:
+        print(USAGE, file=sys.stderr)
+        return 1
+
+    if argv[2] == "list":
+        translated = [argv[0], "list-agents", *argv[3:]]
+        return handle_list_agents(translated)
+
+    print(USAGE, file=sys.stderr)
+    return 1
+
+
+def handle_agent_subcommand(argv: list[str]) -> int:
+    if len(argv) < 3:
+        print(USAGE, file=sys.stderr)
+        return 1
+
+    if argv[2] == "add-skill":
+        if len(argv) < 5:
+            print(USAGE, file=sys.stderr)
+            return 1
+        translated = [argv[0], "agent", argv[3], "skill", argv[4], *argv[5:]]
+        return handle_attach(translated)
+
+    if argv[2] == "create":
+        if len(argv) < 5:
+            print(USAGE, file=sys.stderr)
+            return 1
+        translated = [argv[0], "create-agent", argv[3], "skill", argv[4], *argv[5:]]
+        return handle_create_agent(translated)
+
+    if argv[2] == "list":
+        translated = [argv[0], "list-agents", *argv[3:]]
+        return handle_list_agents(translated)
+
+    return handle_attach(argv)
+
+
 def main(argv: list[str]) -> int:
     if len(argv) < 2 or argv[1] in {"-h", "--help"}:
         print(USAGE)
         return 0 if len(argv) >= 2 else 1
 
     if argv[1] == "agent":
-        return handle_attach(argv)
+        return handle_agent_subcommand(argv)
+    if argv[1] == "agents":
+        return handle_agents(argv)
+    if argv[1] == "skill":
+        return handle_skill(argv)
+    if argv[1] == "install":
+        return handle_install(argv)
+    if argv[1] == "setup":
+        return handle_setup(argv)
     if argv[1] == "create-agent":
         return handle_create_agent(argv)
     if argv[1] == "list-agents":

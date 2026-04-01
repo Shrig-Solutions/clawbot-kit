@@ -7,6 +7,26 @@ description: Manage stories on Shortcut.com kanban boards. Use when creating, up
 
 Manage tasks and stories on Shortcut boards via API.
 
+## Attach To An Agent
+
+To add this skill to a specific generated agent:
+
+```bash
+python3 scripts/clawkit.py skill add shortcut to <agent_name>
+```
+
+Example:
+
+```bash
+python3 scripts/clawkit.py skill add shortcut to backend --bundle full-stack
+```
+
+To create a separate OpenClaw agent dedicated to this skill:
+
+```bash
+python3 scripts/clawkit.py skill new-agent shortcut as shortcut-bot
+```
+
 ## Event-driven behavior
 
 When invoked from a Shortcut webhook or a pasted Shortcut event:

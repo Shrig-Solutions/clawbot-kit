@@ -8,6 +8,26 @@ metadata: {"clawdbot":{"emoji":"🛠️","requires":{"bins":["node"]}}}
 
 Use this skill when working on backend services built with Node.js or NestJS.
 
+## Attach To An Agent
+
+To add this skill to a specific generated agent:
+
+```bash
+python3 scripts/clawkit.py skill add nodejs-nestjs-backend to <agent_name>
+```
+
+Example:
+
+```bash
+python3 scripts/clawkit.py skill add nodejs-nestjs-backend to backend --bundle full-stack
+```
+
+To create a separate OpenClaw agent dedicated to this skill:
+
+```bash
+python3 scripts/clawkit.py skill new-agent nodejs-nestjs-backend as backend-specialist
+```
+
 ## Use this skill for
 
 - designing or reviewing REST APIs

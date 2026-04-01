@@ -7,6 +7,26 @@ description: API-first email platform designed for AI agents. Create and manage 
 
 Use AgentMail for both outbound email and inbound-email-triggered agent workflows.
 
+## Attach To An Agent
+
+To add this skill to a specific generated agent:
+
+```bash
+python3 scripts/clawkit.py skill add agentmail to <agent_name>
+```
+
+Example:
+
+```bash
+python3 scripts/clawkit.py skill add agentmail to backend --bundle full-stack
+```
+
+To create a separate OpenClaw agent dedicated to this skill:
+
+```bash
+python3 scripts/clawkit.py skill new-agent agentmail as agentmail-bot
+```
+
 ## Use the right layer
 
 Use these scripts for outbound API work:

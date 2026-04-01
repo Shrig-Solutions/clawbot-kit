@@ -9,6 +9,20 @@ metadata: {"clawdbot":{"emoji":"🌳","requires":{"bins":["git"]}}}
 
 Essential Git commands for version control and collaboration.
 
+## Attach To An Agent
+
+To add this skill to a specific generated agent:
+
+```bash
+python3 scripts/clawkit.py skill add git-essentials to <agent_name>
+```
+
+Example:
+
+```bash
+python3 scripts/clawkit.py skill add git-essentials to backend --bundle full-stack
+```
+
 ## Initial Setup
 
 ```bash

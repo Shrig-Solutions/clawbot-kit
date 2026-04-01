@@ -2,6 +2,46 @@
 
 Portable Clawbot/OpenClaw skill kit.
 
+## Quick start
+
+Use `clawkit` as the main entrypoint.
+
+Install OpenClaw:
+
+```bash
+python3 scripts/clawkit.py install openclaw
+```
+
+Install a bundle:
+
+```bash
+python3 scripts/clawkit.py install bundle full-stack --model default --bot clawbot --channel engineering
+```
+
+Set up a skill:
+
+```bash
+python3 scripts/clawkit.py skill setup agentmail
+```
+
+Attach a skill to an existing generated agent:
+
+```bash
+python3 scripts/clawkit.py skill add agentmail to backend --bundle full-stack
+```
+
+Create a separate OpenClaw agent for one skill:
+
+```bash
+python3 scripts/clawkit.py skill new-agent agentmail as backend-mail --model gpt-5.2
+```
+
+List agents:
+
+```bash
+python3 scripts/clawkit.py agents list
+```
+
 ## Included skills
 
 - `skills/agentmail` — email workflows and inbox-triggered agents
@@ -26,6 +66,10 @@ cp -R skills/frontend-react-nextjs ~/.openclaw/skills/
 cp -R skills/git-commit ~/.openclaw/skills/
 cp -R skills/git-essentials ~/.openclaw/skills/
 ```
+
+## Detailed commands
+
+The sections below describe the lower-level commands that `clawkit` wraps.
 
 ## Install OpenClaw
 
@@ -84,16 +128,16 @@ If the script name is omitted, the launcher tries `skills/<skill>/scripts/setup_
 You can also add a skill to one generated agent and immediately run that skill's setup flow:
 
 ```bash
-python3 scripts/clawkit.py agent <agent_name> skill <skill_name>
-bash scripts/clawkit.sh agent <agent_name> skill <skill_name>
+python3 scripts/clawkit.py skill add <skill_name> to <agent_name>
+bash scripts/clawkit.sh skill add <skill_name> to <agent_name>
 ```
 
 Examples:
 
 ```bash
-python3 scripts/clawkit.py agent backend skill agentmail
-python3 scripts/clawkit.py agent backend skill agentmail --bundle full-stack
-python3 scripts/clawkit.py agent backend skill agentmail -- --help
+python3 scripts/clawkit.py skill add agentmail to backend
+python3 scripts/clawkit.py skill add agentmail to backend --bundle full-stack
+python3 scripts/clawkit.py skill add agentmail to backend -- --help
 ```
 
 That command:
@@ -117,18 +161,18 @@ Relevant OpenClaw docs:
 Commands:
 
 ```bash
-python3 scripts/clawkit.py create-agent <agent_name> skill <skill_name>
-bash scripts/clawkit.sh create-agent <agent_name> skill <skill_name>
-python3 scripts/clawkit.py list-agents
-bash scripts/clawkit.sh list-agents
+python3 scripts/clawkit.py skill new-agent <skill_name> as <agent_name>
+bash scripts/clawkit.sh skill new-agent <skill_name> as <agent_name>
+python3 scripts/clawkit.py agents list
+bash scripts/clawkit.sh agents list
 ```
 
 Examples:
 
 ```bash
-python3 scripts/clawkit.py create-agent backend-mail skill agentmail --model gpt-5.2
-python3 scripts/clawkit.py create-agent ops-shortcut skill shortcut --bind telegram:ops
-python3 scripts/clawkit.py create-agent backend-mail skill agentmail -- --help
+python3 scripts/clawkit.py skill new-agent agentmail as backend-mail --model gpt-5.2
+python3 scripts/clawkit.py skill new-agent shortcut as ops-shortcut --bind telegram:ops
+python3 scripts/clawkit.py skill new-agent agentmail as backend-mail -- --help
 ```
 
 That command:
@@ -143,8 +187,8 @@ That command:
 To list current agents:
 
 ```bash
-python3 scripts/clawkit.py list-agents
-bash scripts/clawkit.sh list-agents
+python3 scripts/clawkit.py agents list
+bash scripts/clawkit.sh agents list
 ```
 
 When `openclaw` is available on PATH, this runs:

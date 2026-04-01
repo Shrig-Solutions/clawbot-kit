@@ -8,6 +8,20 @@ metadata: {"clawdbot":{"emoji":"📝","requires":{"bins":["git"]}}}
 
 Create clean, reviewable commits from actual staged changes.
 
+## Attach To An Agent
+
+To add this skill to a specific generated agent:
+
+```bash
+python3 scripts/clawkit.py skill add git-commit to <agent_name>
+```
+
+Example:
+
+```bash
+python3 scripts/clawkit.py skill add git-commit to backend --bundle full-stack
+```
+
 ## Use this skill for
 
 - checking what is staged before commit

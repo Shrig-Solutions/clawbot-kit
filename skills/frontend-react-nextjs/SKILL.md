@@ -8,6 +8,26 @@ metadata: {"clawdbot":{"emoji":"🎨","requires":{"bins":["node"]}}}
 
 Use this skill when working on frontend apps or UI systems built with HTML, CSS, Tailwind CSS, React, or Next.js.
 
+## Attach To An Agent
+
+To add this skill to a specific generated agent:
+
+```bash
+python3 scripts/clawkit.py skill add frontend-react-nextjs to <agent_name>
+```
+
+Example:
+
+```bash
+python3 scripts/clawkit.py skill add frontend-react-nextjs to frontend --bundle full-stack
+```
+
+To create a separate OpenClaw agent dedicated to this skill:
+
+```bash
+python3 scripts/clawkit.py skill new-agent frontend-react-nextjs as frontend-specialist
+```
+
 ## Use this skill for
 
 - building or reviewing pages, dashboards, and reusable components
