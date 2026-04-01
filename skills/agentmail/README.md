@@ -44,6 +44,23 @@ Then restart OpenClaw if needed.
 
 ## Setup
 
+### Guided terminal setup
+
+If you want to set up the skill interactively from the terminal, run:
+
+```bash
+python3 scripts/setup_skill.py
+```
+
+That guided setup will:
+
+- prompt for the AgentMail API key
+- write `~/.openclaw/skills/agentmail/.env`
+- build `config/config.json`
+- prompt for inbox email to OpenClaw agent mappings
+- optionally update the ngrok config
+- optionally run bootstrap on macOS
+
 ### 1) Add your API key
 
 Set `AGENTMAIL_API_KEY` in your environment, or place it in the fallback env file:
