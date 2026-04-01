@@ -9,6 +9,19 @@ import sys
 from pathlib import Path
 
 
+USAGE = """Usage:
+  python3 scripts/setup_skill.py
+
+Interactive AgentMail setup for this skill.
+
+What it configures:
+  - skills/agentmail/.env
+  - skills/agentmail/config/config.json
+  - optional ngrok authtoken in config/ngrok-agentmail.yml
+  - optional bootstrap run on macOS
+"""
+
+
 def skill_dir() -> Path:
     return Path(__file__).resolve().parent.parent
 
@@ -149,6 +162,10 @@ def run_bootstrap() -> int:
 
 
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] in {"-h", "--help"}:
+        print(USAGE)
+        return 0
+
     print("AgentMail interactive setup")
     print(f"Skill directory: {skill_dir()}")
 

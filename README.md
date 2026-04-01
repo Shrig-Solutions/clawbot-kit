@@ -60,6 +60,25 @@ bash scripts/install-openclaw-local.sh --prefix /opt/openclaw --version latest
 
 These wrappers call the official hosted installer scripts from `openclaw.ai`, so the target machine needs internet access.
 
+## Run skill scripts from repo root
+
+You can run skill-local scripts through a single dynamic launcher from the repo root:
+
+```bash
+python3 scripts/skill.py <skill> [script] [args...]
+bash scripts/skill.sh <skill> [script] [args...]
+```
+
+Examples:
+
+```bash
+python3 scripts/skill.py agentmail
+python3 scripts/skill.py agentmail send_email.py --agent main --to someone@example.com --subject Hello --text Test
+bash scripts/skill.sh shortcut bootstrap.sh
+```
+
+If the script name is omitted, the launcher tries `skills/<skill>/scripts/setup_skill.py`.
+
 ## Setup overview
 
 Each skill has its own README with setup steps. In general, you will need to:

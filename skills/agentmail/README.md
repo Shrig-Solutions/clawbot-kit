@@ -49,6 +49,9 @@ Then restart OpenClaw if needed.
 If you want to set up the skill interactively from the terminal, run:
 
 ```bash
+python3 ../../scripts/skill.py agentmail
+bash ../../scripts/skill.sh agentmail
+python3 ../../scripts/setup_skill.py
 python3 scripts/setup_skill.py
 ```
 
