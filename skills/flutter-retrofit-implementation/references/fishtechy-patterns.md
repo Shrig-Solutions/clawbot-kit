@@ -1,4 +1,4 @@
-# Fishtechy Retrofit patterns
+# Fishtechy reference patterns for Flutter Retrofit implementation
 
 ## Service location
 

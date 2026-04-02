@@ -1,4 +1,4 @@
-# Fishtechy Cubit patterns
+# Fishtechy reference patterns for Flutter Cubit management
 
 ## Core base classes
 

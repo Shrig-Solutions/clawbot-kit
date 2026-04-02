@@ -1,4 +1,4 @@
-# Fishtechy JSON serialization patterns
+# Fishtechy reference patterns for Flutter JSON serialization
 
 ## Locations
 
